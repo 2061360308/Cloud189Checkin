@@ -30,7 +30,7 @@ err_message = ''  # 错误信息
 user_amount = ''  # 用户云朵·数量
 GLOBAL_DEBUG = False
 
-PUSH_SWITCH = str(os.getenv("PUSH_SWITCH", "0"))  # "0" 关闭通知 "1"开启通知
+PUSH_SWITCH = "1"  # "0" 关闭通知 "1"开启通知
 
 msgs = ""
 
@@ -1054,4 +1054,5 @@ if __name__ == "__main__":
     
     push_msg()
     
+
     print(user_amount)
