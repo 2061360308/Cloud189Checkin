@@ -1,0 +1,56 @@
+name: YiDongYunPan
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: 5 16 * * *
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ydyp
+    steps:
+      - name: 🔌 Check out code
+        uses: actions/checkout@main
+
+      - name: 🐍 Setup Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: 🔧 Init secrets
+        uses: shine1594/secrets-to-env-action@master
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          secrets_env: production
+          prefix_prod: ""
+          file_name_prod: .env
+
+      - name: 📡 Init dependencies
+        run: python -m pip install requests python-dotenv
+
+      - name: 🚀 Run
+        uses: nick-fields/retry@master
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python mcloud.py
+      
+      - name: 🚗 Keep Running
+        if: github.event_name == 'schedule'
+        run: |
+          git config --local user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "${{ github.actor }}"
+          git remote set-url origin https://${{ github.actor }}:${{ github.token }}@github.com/${{ github.repository }}
+          git pull --rebase --autostash
+          git commit --allow-empty -m "Keep Running..."
+          git push
+
+      - name: 🎉 Delete old workflow run
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 50
